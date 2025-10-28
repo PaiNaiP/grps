@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres-products:
+    image: postgres:15
+    container_name: postgres-products
+    environment:
+      POSTGRES_DB: products_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_products_data:/var/lib/postgresql/data
+      - ./scripts/init-products.sql:/docker-entrypoint-initdb.d/init-products.sql
+    networks:
+      - ecommerce-network
+
+  postgres-cart:
+    image: postgres:15
+    container_name: postgres-cart
+    environment:
+      POSTGRES_DB: cart_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_cart_data:/var/lib/postgresql/data
+      - ./scripts/init-cart.sql:/docker-entrypoint-initdb.d/init-cart.sql
+    networks:
+      - ecommerce-network
+
+volumes:
+  postgres_products_data:
+  postgres_cart_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge

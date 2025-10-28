@@ -1,0 +1,22 @@
+{
+  "name": "ecommerce-microservices",
+  "version": "1.0.0",
+  "description": "E-commerce microservices with gRPC, PostgreSQL and Saga pattern",
+  "main": "index.js",
+  "scripts": {
+    "start:product": "cd services/product && npm start",
+    "start:cart": "cd services/cart && npm start",
+    "start:orchestrator": "cd services/orchestrator && npm start",
+    "start:all": "concurrently --kill-others --prefix \"[{name}]\" --names \"PRODUCT,CART,ORCHESTRATOR\" \"npm run start:product\" \"npm run start:cart\" \"npm run start:orchestrator\"",
+    "start:dev": "concurrently --kill-others --prefix \"[{name}]\" --names \"PRODUCT,CART,ORCHESTRATOR\" \"cd services/product && npm run dev\" \"cd services/cart && npm run dev\" \"cd services/orchestrator && npm run dev\"",
+    "install:all": "npm install && cd services/product && npm install && cd ../cart && npm install && cd ../orchestrator && npm install",
+    "setup:db": "node scripts/setup-databases.js",
+    "test": "node test-client.js"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": ["microservices", "grpc", "postgresql", "saga"],
+  "author": "",
+  "license": "MIT"
+}

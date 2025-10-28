@@ -1,0 +1,88 @@
+// Используем третью версию синтаксиса protobuf (она самая новая и простая)
+syntax = "proto3";
+
+// Название пакета — это как “папка”, в которой лежат все определения, связанные с продуктами
+package product;
+
+// Это сервис, который управляет товарами (создаёт, получает, обновляет, удаляет)
+service ProductService {
+  // Создаёт новый товар
+  rpc CreateProduct(CreateProductRequest) returns (ProductResponse);
+  // Получает информацию о товаре по его ID
+  rpc GetProduct(GetProductRequest) returns (ProductResponse);
+  // Обновляет данные существующего товара
+  rpc UpdateProduct(UpdateProductRequest) returns (ProductResponse);
+  // Удаляет товар по ID
+  rpc DeleteProduct(DeleteProductRequest) returns (DeleteProductResponse);
+  // Возвращает список всех товаров (с пагинацией и фильтрацией)
+  rpc ListProducts(ListProductsRequest) returns (ListProductsResponse);
+}
+
+// Описание одного товара
+message Product {
+  string id = 1;           // Уникальный ID товара
+  string name = 2;         // Название товара
+  string description = 3;  // Описание, типа “что это вообще такое”
+  double price = 4;        // Цена за единицу
+  int32 stock = 5;         // Сколько штук на складе
+  string category = 6;     // Категория (например, “электроника”)
+  string created_at = 7;   // Когда товар был создан
+  string updated_at = 8;   // Когда последний раз обновляли инфу
+}
+
+// Запрос на создание нового товара
+message CreateProductRequest {
+  string name = 1;         // Название нового товара
+  string description = 2;  // Короткое описание
+  double price = 3;        // Цена
+  int32 stock = 4;         // Количество на складе
+  string category = 5;     // Категория
+}
+
+// Запрос на получение товара по ID
+message GetProductRequest {
+  string id = 1;           // ID товара, который нужно найти
+}
+
+// Запрос на обновление данных товара
+message UpdateProductRequest {
+  string id = 1;           // ID товара, который обновляем
+  string name = 2;         // Новое имя (если меняем)
+  string description = 3;  // Новое описание
+  double price = 4;        // Новая цена
+  int32 stock = 5;         // Новое количество
+  string category = 6;     // Новая категория
+}
+
+// Запрос на удаление товара
+message DeleteProductRequest {
+  string id = 1;           // ID товара, который удаляем
+}
+
+// Ответ после удаления товара
+message DeleteProductResponse {
+  bool success = 1;        // Успешно ли удалили
+  string message = 2;      // Текст, типа “товар удалён” или “товар не найден”
+}
+
+// Запрос на получение списка товаров
+message ListProductsRequest {
+  int32 page = 1;          // Номер страницы (если много товаров)
+  int32 limit = 2;         // Сколько товаров показывать на странице
+  string category = 3;     // Фильтр по категории (если нужно)
+}
+
+// Ответ со списком товаров
+message ListProductsResponse {
+  repeated Product products = 1; // Массив товаров (список)
+  int32 total = 2;               // Общее количество всех товаров
+  int32 page = 3;                // Какая страница сейчас
+  int32 limit = 4;               // Сколько товаров на странице
+}
+
+// Универсальный ответ с одним товаром
+message ProductResponse {
+  bool success = 1;        // true = всё хорошо, false = ошибка
+  string message = 2;      // Сообщение (например, “товар найден”)
+  Product product = 3;     // Сам объект товара
+}

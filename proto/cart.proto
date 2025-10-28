@@ -1,0 +1,150 @@
+// Указываем, что используем третью версию синтаксиса Protocol Buffers
+syntax = "proto3";
+
+// Название пакета — как “папка” для логического объединения сообщений и сервисов
+package cart;
+
+// Это сервис (набор функций), которые можно вызывать через gRPC
+service CartService {
+  // Регистрирует нового пользователя
+  rpc RegisterUser(RegisterUserRequest) returns (UserResponse);
+  // Вход пользователя в систему
+  rpc LoginUser(LoginUserRequest) returns (LoginResponse);
+  // Получить данные пользователя по его ID
+  rpc GetUser(GetUserRequest) returns (UserResponse);
+  // Обновить данные пользователя (имя, телефон, адрес)
+  rpc UpdateUser(UpdateUserRequest) returns (UserResponse);
+  // Добавить товар в корзину
+  rpc AddToCart(AddToCartRequest) returns (CartItemResponse);
+  // Удалить товар из корзины
+  rpc RemoveFromCart(RemoveFromCartRequest) returns (RemoveFromCartResponse);
+  // Изменить количество конкретного товара в корзине
+  rpc UpdateCartItem(UpdateCartItemRequest) returns (CartItemResponse);
+  // Получить содержимое корзины пользователя
+  rpc GetCart(GetCartRequest) returns (GetCartResponse);
+  // Очистить корзину полностью
+  rpc ClearCart(ClearCartRequest) returns (ClearCartResponse);
+}
+
+// Информация о пользователе
+message User {
+  string id = 1;           // Уникальный идентификатор пользователя
+  string email = 2;        // Почта пользователя
+  string name = 3;         // Имя пользователя
+  string phone = 4;        // Телефон
+  string address = 5;      // Адрес доставки
+  string created_at = 6;   // Когда создан аккаунт
+  string updated_at = 7;   // Когда последний раз обновляли данные
+}
+
+// Информация об одном товаре в корзине
+message CartItem {
+  string id = 1;           // Уникальный ID записи корзины
+  string user_id = 2;      // Какому пользователю принадлежит
+  string product_id = 3;   // ID товара
+  int32 quantity = 4;      // Количество единиц товара
+  double price = 5;        // Цена за штуку
+  string created_at = 6;   // Когда добавили
+  string updated_at = 7;   // Когда обновили (например, поменяли количество)
+}
+
+// Запрос на регистрацию пользователя
+message RegisterUserRequest {
+  string email = 1;        // Почта
+  string password = 2;     // Пароль
+  string name = 3;         // Имя
+  string phone = 4;        // Телефон
+  string address = 5;      // Адрес
+}
+
+// Запрос на вход в систему
+message LoginUserRequest {
+  string email = 1;        // Почта
+  string password = 2;     // Пароль
+}
+
+// Ответ на вход
+message LoginResponse {
+  bool success = 1;        // Успешный вход или нет
+  string message = 2;      // Сообщение, например "Неверный пароль"
+  string token = 3;        // JWT токен для авторизации
+  User user = 4;           // Данные пользователя
+}
+
+// Запрос для получения информации о пользователе
+message GetUserRequest {
+  string user_id = 1;      // ID пользователя
+}
+
+// Запрос для обновления данных пользователя
+message UpdateUserRequest {
+  string user_id = 1;      // ID пользователя
+  string name = 2;         // Новое имя
+  string phone = 3;        // Новый телефон
+  string address = 4;      // Новый адрес
+}
+
+// Запрос на добавление товара в корзину
+message AddToCartRequest {
+  string user_id = 1;      // ID пользователя
+  string product_id = 2;   // ID товара
+  int32 quantity = 3;      // Количество
+  double price = 4;        // Цена за штуку
+}
+
+// Запрос на удаление товара из корзины
+message RemoveFromCartRequest {
+  string user_id = 1;      // ID пользователя
+  string product_id = 2;   // ID товара
+}
+
+// Запрос на изменение количества товара
+message UpdateCartItemRequest {
+  string user_id = 1;      // ID пользователя
+  string product_id = 2;   // ID товара
+  int32 quantity = 3;      // Новое количество
+}
+
+// Запрос на получение всей корзины
+message GetCartRequest {
+  string user_id = 1;      // ID пользователя
+}
+
+// Запрос на очистку корзины
+message ClearCartRequest {
+  string user_id = 1;      // ID пользователя
+}
+
+// Ответ с данными о пользователе
+message UserResponse {
+  bool success = 1;        // Успешно ли
+  string message = 2;      // Сообщение (например, "Пользователь найден")
+  User user = 3;           // Сам пользователь
+}
+
+// Ответ после добавления или обновления товара в корзине
+message CartItemResponse {
+  bool success = 1;        // Успешно ли
+  string message = 2;      // Сообщение
+  CartItem cart_item = 3;  // Сам товар
+}
+
+// Ответ при получении корзины
+message GetCartResponse {
+  bool success = 1;            // Успешно ли
+  string message = 2;          // Сообщение
+  repeated CartItem cart_items = 3; // Список товаров в корзине (может быть несколько)
+  double total_amount = 4;     // Общая сумма корзины
+}
+
+// Ответ при удалении товара
+message RemoveFromCartResponse {
+  bool success = 1;        // Успешно ли
+  string message = 2;      // Сообщение
+}
+
+// Ответ при очистке корзины
+message ClearCartResponse {
+  bool success = 1;        // Успешно ли
+  string message = 2;      // Сообщение
+}

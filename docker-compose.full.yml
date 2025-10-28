@@ -1,0 +1,114 @@
+services:
+  # База данных для товаров
+  postgres-products:
+    image: postgres:15
+    container_name: postgres-products
+    environment:
+      POSTGRES_DB: products_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_products_data:/var/lib/postgresql/data
+      - ./scripts/init-products.sql:/docker-entrypoint-initdb.d/init-products.sql
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # База данных для корзины
+  postgres-cart:
+    image: postgres:15
+    container_name: postgres-cart
+    environment:
+      POSTGRES_DB: cart_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_cart_data:/var/lib/postgresql/data
+      - ./scripts/init-cart.sql:/docker-entrypoint-initdb.d/init-cart.sql
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Product Service
+  product-service:
+    build:
+      context: .
+      dockerfile: ./services/product/Dockerfile
+    container_name: product-service
+    ports:
+      - "50051:50051"
+    environment:
+      - DB_HOST=postgres-products
+      - DB_PORT=5432
+      - DB_NAME=products_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+    depends_on:
+      postgres-products:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  # Cart Service
+  cart-service:
+    build:
+      context: .
+      dockerfile: ./services/cart/Dockerfile
+    container_name: cart-service
+    ports:
+      - "50052:50052"
+    environment:
+      - DB_HOST=postgres-cart
+      - DB_PORT=5432
+      - DB_NAME=cart_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - JWT_SECRET=your-secret-key-change-in-production
+      - PRODUCT_SERVICE_URL=product-service:50051
+    depends_on:
+      postgres-cart:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+  # Orchestrator Service
+  orchestrator-service:
+    build:
+      context: .
+      dockerfile: ./services/orchestrator/Dockerfile
+    container_name: orchestrator-service
+    ports:
+      - "50053:50053"
+    environment:
+      - PRODUCT_SERVICE_URL=product-service:50051
+      - CART_SERVICE_URL=cart-service:50052
+    depends_on:
+      - product-service
+      - cart-service
+    networks:
+      - ecommerce-network
+    restart: unless-stopped
+
+volumes:
+  postgres_products_data:
+  postgres_cart_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge

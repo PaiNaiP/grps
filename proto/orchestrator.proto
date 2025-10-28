@@ -1,0 +1,66 @@
+// Говорим, что используем третью версию синтаксиса protobuf (самая современная и простая)
+syntax = "proto3";
+
+// Название пакета — как имя проекта или модуля
+package orchestrator;
+
+// Подключаем другие файлы с описаниями (тут лежат продукты и корзина)
+import "product.proto";
+import "cart.proto";
+
+// Это главный сервис оркестратора — он управляет заказами
+service OrchestratorService {
+  // Оформить заказ (обрабатывает корзину и создаёт заказ)
+  rpc ProcessOrder(ProcessOrderRequest) returns (ProcessOrderResponse);
+  // Отменить уже созданный заказ
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse);
+  // Узнать, на каком этапе заказ (например, “в обработке”, “доставлен” и т.д.)
+  rpc GetOrderStatus(GetOrderStatusRequest) returns (GetOrderStatusResponse);
+}
+
+// Запрос на оформление заказа
+message ProcessOrderRequest {
+  string user_id = 1;         // ID пользователя, который делает заказ
+  repeated OrderItem items = 2; // Список товаров, которые он хочет купить (может быть несколько)
+}
+
+// Один товар из заказа
+message OrderItem {
+  string product_id = 1;      // ID товара (уникальный)
+  int32 quantity = 2;         // Сколько штук товара
+  double price = 3;           // Цена за штуку
+}
+
+// Ответ после попытки оформить заказ
+message ProcessOrderResponse {
+  bool success = 1;           // true = заказ оформлен, false = ошибка
+  string message = 2;         // Текстовое сообщение (“успех”, “товара нет” и т.п.)
+  string order_id = 3;        // Уникальный ID заказа
+  string status = 4;          // Текущий статус (например, “создан”, “в пути”)
+}
+
+// Запрос на отмену заказа
+message CancelOrderRequest {
+  string order_id = 1;        // ID заказа, который нужно отменить
+  string user_id = 2;         // ID пользователя, который отменяет (чтобы чужие не могли)
+}
+
+// Ответ после отмены заказа
+message CancelOrderResponse {
+  bool success = 1;           // Успешно ли отменили
+  string message = 2;         // Сообщение, например “Заказ успешно отменён”
+}
+
+// Запрос, чтобы узнать статус заказа
+message GetOrderStatusRequest {
+  string order_id = 1;        // ID интересующего заказа
+}
+
+// Ответ со статусом заказа
+message GetOrderStatusResponse {
+  bool success = 1;           // Успешно ли нашли заказ
+  string message = 2;         // Сообщение, например “Заказ найден”
+  string status = 3;          // Статус (“в пути”, “доставлен”, “отменён” и т.п.)
+  repeated OrderItem items = 4; // Список товаров внутри этого заказа
+  double total_amount = 5;    // Общая сумма всего заказа
+}
